@@ -409,6 +409,70 @@
 
   #categoryFilters { margin-bottom: 24px; }
 
+  /* SEARCH */
+  .search-wrap {
+    position: relative;
+    margin-bottom: 14px;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--light);
+    pointer-events: none;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    padding: 10px 38px 10px 36px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    color: var(--dark);
+    background: white;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+  }
+
+  .search-wrap input:focus { border-color: var(--charcoal); }
+  .search-wrap input::placeholder { color: var(--light); }
+
+  .search-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--light);
+    font-size: 0.75rem;
+    padding: 4px;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+
+  .search-clear:hover { color: var(--mid); }
+
+  /* TOTAL BANNER */
+  .total-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--charcoal);
+    color: white;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+  }
+
+  .total-banner span { font-size: 0.82rem; opacity: 0.75; font-weight: 500; }
+  .total-amount { font-family: 'Playfair Display', serif; font-size: 1.5rem !important; font-weight: 700; opacity: 1 !important; }
+
   /* CARDS GRID */
   .cards-grid {
     display: flex;
@@ -924,6 +988,19 @@
       Add Gift Card
     </button>
 
+    <!-- SEARCH BAR -->
+    <div class="search-wrap">
+      <svg class="search-icon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Search by store name..." oninput="onSearch()" autocomplete="off">
+      <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none">✕</button>
+    </div>
+
+    <!-- TOTAL BANNER -->
+    <div class="total-banner" id="totalBanner">
+      <span id="totalLabel">Total across all active cards</span>
+      <span class="total-amount" id="totalAmount">$0.00</span>
+    </div>
+
     <div class="filters" id="mainFilters">
       <button class="filter-btn active" onclick="setFilter('active', this)">All Active</button>
       <button class="filter-btn" onclick="setFilter('used', this)">Used Up</button>
@@ -1097,6 +1174,22 @@
   let pinVisible = {};
   let numberVisible = {};
   let expanded = {};
+  let searchQuery = '';
+
+  window.onSearch = function() {
+    searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+    document.getElementById('searchClear').style.display = searchQuery ? 'block' : 'none';
+    render();
+    updateFooter();
+  };
+
+  window.clearSearch = function() {
+    document.getElementById('searchInput').value = '';
+    searchQuery = '';
+    document.getElementById('searchClear').style.display = 'none';
+    render();
+    updateFooter();
+  };
 
   window.toggleExpand = function(id) {
     expanded[id] = !expanded[id];
@@ -1385,6 +1478,7 @@
     }
     if (currentCategory) entries = entries.filter(c => c.category === currentCategory);
     if (currentOwner) entries = entries.filter(c => c.owner === currentOwner);
+    if (searchQuery) entries = entries.filter(c => c.store.toLowerCase().includes(searchQuery));
     return entries;
   }
 
@@ -1416,9 +1510,24 @@
     return '•••• •••• •••• ' + cleaned.slice(-4);
   }
 
+  function updateTotal(filtered) {
+    const total = filtered.reduce((sum, c) => sum + (parseFloat(c.current) || 0), 0);
+    document.getElementById('totalAmount').textContent = fmt(total);
+    const count = filtered.length;
+    const isSearching = searchQuery.length > 0;
+    const hasFilters = currentCategory || currentOwner;
+    let label = '';
+    if (isSearching) label = `Total across ${count} result${count !== 1 ? 's' : ''}`;
+    else if (hasFilters) label = `Total across ${count} filtered card${count !== 1 ? 's' : ''}`;
+    else if (currentFilter === 'used') label = `Total across ${count} used card${count !== 1 ? 's' : ''}`;
+    else label = `Total across ${count} active card${count !== 1 ? 's' : ''}`;
+    document.getElementById('totalLabel').textContent = label;
+  }
+
   function render() {
     const grid = document.getElementById('cardsGrid');
     const filtered = getFilteredCards();
+    updateTotal(filtered);
 
     if (!filtered.length) {
       const msgs = {
