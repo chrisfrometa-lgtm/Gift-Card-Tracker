@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Gift Cards</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FAF7F2;
+    --warm-white: #FFFDF9;
+    --charcoal: #1C1C1E;
+    --dark: #2C2C2E;
+    --mid: #6C6C70;
+    --light: #AEAEB2;
+    --border: #E5E0D8;
+    --gold: #C9A84C;
+    --gold-light: #F0E0A8;
+    --gold-pale: #FBF5E4;
+    --green: #2D7A52;
+    --green-pale: #E8F4EE;
+    --red: #C0392B;
+    --red-pale: #FDECEA;
+    --shadow: 0 2px 20px rgba(0,0,0,0.07);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--charcoal);
+    min-height: 100vh;
+  }
+
+  /* PASSWORD SCREEN */
+  .password-screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--charcoal);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .password-screen.show { display: flex; }
+
+  .password-card {
+    text-align: center;
+    max-width: 360px;
+    width: 100%;
+  }
+
+  .password-card .lock-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .password-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    color: var(--warm-white);
+    margin-bottom: 8px;
+  }
+
+  .password-card p {
+    color: var(--light);
+    font-size: 0.85rem;
+    margin-bottom: 32px;
+  }
+
+  .password-input-wrap {
+    position: relative;
+    margin-bottom: 14px;
+  }
+
+  .password-input-wrap input {
+    width: 100%;
+    padding: 14px 48px 14px 18px;
+    border-radius: 14px;
+    border: 2px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.07);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+
+  .password-input-wrap input::placeholder { color: rgba(255,255,255,0.3); letter-spacing: 0; }
+  .password-input-wrap input:focus { border-color: var(--gold); }
+  .password-input-wrap input.wrong { border-color: var(--red); animation: shake 0.4s ease; }
+
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-8px)}
+    40%{transform:translateX(8px)}
+    60%{transform:translateX(-5px)}
+    80%{transform:translateX(5px)}
+  }
+
+  .toggle-pw {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.4);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0;
+    line-height: 1;
+  }
+
+  .toggle-pw:hover { color: rgba(255,255,255,0.7); }
+
+  .btn-unlock {
+    width: 100%;
+    padding: 14px;
+    background: var(--gold);
+    color: var(--charcoal);
+    border: none;
+    border-radius: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-unlock:hover { background: #B8963D; transform: translateY(-1px); }
+
+  .pw-error {
+    color: var(--red);
+    font-size: 0.8rem;
+    margin-top: 12px;
+    min-height: 20px;
+    font-weight: 500;
+  }
+
+  /* SYNC STATUS */
+  .sync-bar {
+    background: var(--charcoal);
+    text-align: center;
+    padding: 6px 16px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .sync-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--light);
+    transition: background 0.4s;
+  }
+
+  .sync-dot.connected { background: #48B87A; }
+  .sync-dot.syncing { background: var(--gold); animation: pulse 1s infinite; }
+  .sync-dot.error { background: var(--red); }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* SETUP SCREEN */
+  .setup-screen {
+    display: none;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    background: var(--cream);
+  }
+
+  .setup-screen.show { display: flex; }
+
+  .setup-card {
+    background: white;
+    border-radius: 24px;
+    padding: 48px 40px;
+    max-width: 520px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+    border: 1.5px solid var(--border);
+  }
+
+  .setup-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+    color: var(--charcoal);
+  }
+
+  .setup-card p {
+    color: var(--mid);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+
+  .setup-card .step {
+    background: var(--cream);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    border: 1.5px solid var(--border);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--dark);
+  }
+
+  .setup-card .step strong {
+    color: var(--charcoal);
+    font-weight: 600;
+  }
+
+  .setup-card .step a {
+    color: var(--gold);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .setup-divider {
+    text-align: center;
+    color: var(--light);
+    font-size: 0.8rem;
+    margin: 24px 0 20px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .config-input-group {
+    margin-bottom: 14px;
+  }
+
+  .config-input-group label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--mid);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+
+  .config-input-group input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    color: var(--charcoal);
+    background: white;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .config-input-group input:focus { border-color: var(--gold); }
+
+  .btn-connect {
+    width: 100%;
+    padding: 14px;
+    background: var(--charcoal);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.2s;
+  }
+
+  .btn-connect:hover { background: var(--dark); }
+
+  .setup-error {
+    color: var(--red);
+    font-size: 0.82rem;
+    margin-top: 10px;
+    text-align: center;
+    display: none;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--charcoal);
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-left h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--warm-white);
+    font-weight: 600;
+  }
+
+  .header-left p {
+    font-size: 0.75rem;
+    color: var(--light);
+    margin-top: 2px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .btn-settings {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: var(--light);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .btn-settings:hover { background: rgba(255,255,255,0.18); color: white; }
+
+  /* MAIN */
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 36px 24px 80px;
+  }
+
+  .add-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--gold);
+    color: var(--charcoal);
+    border: none;
+    padding: 13px 22px;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-bottom: 28px;
+    transition: all 0.2s;
+  }
+
+  .add-btn:hover {
+    background: #B8963D;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(201,168,76,0.4);
+  }
+
+  /* FILTERS */
+  .filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-btn {
+    padding: 7px 15px;
+    border-radius: 30px;
+    border: 1.5px solid var(--border);
+    background: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--mid);
+    transition: all 0.2s;
+  }
+
+  .filter-btn.active {
+    background: var(--charcoal);
+    border-color: var(--charcoal);
+    color: white;
+  }
+
+  .filter-btn:hover:not(.active) {
+    border-color: var(--charcoal);
+    color: var(--charcoal);
+  }
+
+  #categoryFilters { margin-bottom: 24px; }
+
+  /* CARDS GRID */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--border);
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .card.used { opacity: 0.55; background: var(--cream); }
+
+  .card-accent {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--gold);
+  }
+
+  .card-accent.empty { background: var(--light); }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .card-store {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--charcoal);
+  }
+
+  .card-cat {
+    font-size: 0.72rem;
+    color: var(--mid);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  .card-actions { display: flex; gap: 6px; }
+
+  .icon-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: none;
+    background: var(--cream);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--mid);
+    transition: all 0.15s;
+    font-size: 13px;
+  }
+
+  .icon-btn:hover { background: var(--border); color: var(--charcoal); }
+  .icon-btn.danger:hover { background: var(--red-pale); color: var(--red); }
+
+  .balance-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+
+  .balance-original { font-size: 0.78rem; color: var(--light); }
+
+  .balance-remaining {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--green);
+  }
+
+  .balance-remaining.zero { color: var(--light); }
+  .balance-remaining.low { color: #D4891A; }
+
+  .progress-bar {
+    height: 5px;
+    background: var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), #48B87A);
+    border-radius: 10px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-fill.low { background: linear-gradient(90deg, #D4891A, #F0A830); }
+  .progress-fill.empty { background: var(--light); width: 0 !important; }
+
+  .card-detail {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--mid);
+    padding: 3px 0;
+  }
+
+  .card-detail .val {
+    font-weight: 500;
+    color: var(--dark);
+    font-family: monospace;
+    letter-spacing: 0.03em;
+  }
+
+  .card-detail .val.hidden { letter-spacing: 0.1em; color: var(--light); }
+
+  .pin-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--gold);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0;
+    margin-left: 6px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .used-stamp {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: rgba(0,0,0,0.06);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .update-balance {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    align-items: center;
+  }
+
+  .update-balance input {
+    flex: 1;
+    padding: 7px 10px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .update-balance input:focus { border-color: var(--gold); }
+
+  .btn-update {
+    padding: 7px 12px;
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+
+  .btn-update:hover { background: #235E3F; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--mid);
+    grid-column: 1 / -1;
+  }
+
+  .empty-state .icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.4; }
+  .empty-state h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--charcoal); margin-bottom: 8px; }
+  .empty-state p { font-size: 0.88rem; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--warm-white);
+    border-radius: 20px;
+    padding: 36px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: var(--shadow-lg);
+    animation: modalIn 0.25s ease;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    margin-bottom: 24px;
+    color: var(--charcoal);
+  }
+
+  .form-group { margin-bottom: 16px; }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--mid);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--charcoal);
+    background: white;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  input:focus, select:focus { border-color: var(--gold); }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .btn-cancel {
+    flex: 1;
+    padding: 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: white;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--mid);
+    transition: all 0.2s;
+  }
+
+  .btn-cancel:hover { background: var(--cream); }
+
+  .btn-save {
+    flex: 2;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: var(--charcoal);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+  }
+
+  .btn-save:hover { background: var(--dark); }
+
+  /* LOADING */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--cream);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .loading-overlay.show { display: flex; }
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--mid);
+  }
+
+  #appShell { display: block; }
+
+  @media (max-width: 600px) {
+    header { padding: 20px 18px; }
+    .header-left h1 { font-size: 1.3rem; }
+    main { padding: 24px 16px 60px; }
+    .form-row { grid-template-columns: 1fr; }
+    .setup-card { padding: 32px 24px; }
+    .modal { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PASSWORD SCREEN -->
+<div class="password-screen show" id="passwordScreen">
+  <div class="password-card">
+    <span class="lock-icon">🔐</span>
+    <h2>Our Gift Cards</h2>
+    <p>Enter the passphrase to access your wallet</p>
+    <div class="password-input-wrap">
+      <input type="password" id="pwInput" placeholder="Passphrase" onkeydown="if(event.key==='Enter')checkPassword()">
+      <button class="toggle-pw" onclick="togglePwVisibility()" id="togglePwBtn">👁</button>
+    </div>
+    <button class="btn-unlock" onclick="checkPassword()">Unlock</button>
+    <div class="pw-error" id="pwError"></div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay show" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Connecting...</div>
+</div>
+
+<!-- MAIN APP -->
+<div id="appShell">
+  <div class="sync-bar">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncText">Connecting...</span>
+  </div>
+
+  <header>
+    <div class="header-left">
+      <h1>🎁 Our Gift Cards</h1>
+      <p>Chris &amp; Wife's Wallet</p>
+    </div>
+  </header>
+
+  <main>
+    <button class="add-btn" onclick="openModal()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Add Gift Card
+    </button>
+
+    <div class="filters" id="mainFilters">
+      <button class="filter-btn active" onclick="setFilter('active', this)">All Active</button>
+      <button class="filter-btn" onclick="setFilter('used', this)">Used Up</button>
+      <button class="filter-btn" onclick="setFilter('all', this)">Show All</button>
+    </div>
+    <div class="filters" id="categoryFilters"></div>
+
+    <div class="cards-grid" id="cardsGrid"></div>
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalIfOutside(event)">
+  <div class="modal">
+    <h2 id="modalTitle">Add Gift Card</h2>
+    <div class="form-group">
+      <label>Store / Brand</label>
+      <input type="text" id="fStore" placeholder="e.g. Amazon, Target, Cheesecake Factory">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Original Balance</label>
+        <input type="number" id="fOriginal" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Current Balance</label>
+        <input type="number" id="fCurrent" placeholder="0.00" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Card Number (optional)</label>
+      <input type="text" id="fNumber" placeholder="e.g. 1234 5678 9012 3456">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>PIN (optional)</label>
+        <input type="text" id="fPin" placeholder="e.g. 1234">
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="fCategory">
+          <option value="">Select...</option>
+          <option value="Dining">🍽️ Dining</option>
+          <option value="Shopping">🛍️ Shopping</option>
+          <option value="Travel">✈️ Travel</option>
+          <option value="Entertainment">🎬 Entertainment</option>
+          <option value="Grocery">🛒 Grocery</option>
+          <option value="Gas">⛽ Gas</option>
+          <option value="Online">💻 Online</option>
+          <option value="Other">📦 Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveCard()">Save Card</button>
+    </div>
+  </div>
+</div>
+
+<!-- PASSWORD LOGIC -->
+<script>
+  const PASSPHRASE = 'HaileyJet';
+
+  function checkPassword() {
+    const input = document.getElementById('pwInput');
+    const error = document.getElementById('pwError');
+    if (input.value === PASSPHRASE) {
+      sessionStorage.setItem('gc_unlocked', '1');
+      document.getElementById('passwordScreen').classList.remove('show');
+      input.value = '';
+      error.textContent = '';
+    } else {
+      input.classList.add('wrong');
+      error.textContent = 'Incorrect passphrase. Try again.';
+      setTimeout(() => input.classList.remove('wrong'), 500);
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  function togglePwVisibility() {
+    const input = document.getElementById('pwInput');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+
+  // Check session on load
+  if (sessionStorage.getItem('gc_unlocked') === '1') {
+    document.getElementById('passwordScreen').classList.remove('show');
+  } else {
+    setTimeout(() => document.getElementById('pwInput').focus(), 100);
+  }
+</script>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getDatabase, ref, onValue, set, remove, push } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+  // ─── STATE ────────────────────────────────────────────────────────────────
+  let db = null;
+  let cards = {};
+  let editId = null;
+  let currentFilter = 'active';
+  let currentCategory = null;
+  let pinVisible = {};
+
+  const CATEGORY_ICONS = {
+    'Dining':'🍽️','Shopping':'🛍️','Travel':'✈️',
+    'Entertainment':'🎬','Grocery':'🛒','Gas':'⛽',
+    'Online':'💻','Other':'📦'
+  };
+
+  // ─── CONFIG ───────────────────────────────────────────────────────────────
+  function getSavedConfig() {
+    try { return JSON.parse(localStorage.getItem('fb_config')); } catch { return null; }
+  }
+
+  function saveConfig(cfg) {
+    localStorage.setItem('fb_config', JSON.stringify(cfg));
+  }
+
+  window.resetConfig = function() {
+    if (confirm('Reset Firebase connection? You\'ll need to re-enter your config.')) {
+      localStorage.removeItem('fb_config');
+      location.reload();
+    }
+  };
+
+  // ─── FIREBASE CONNECT ─────────────────────────────────────────────────────
+  function initFirebase(cfg) {
+    const app = initializeApp(cfg);
+    db = getDatabase(app);
+
+    const cardsRef = ref(db, 'giftcards');
+    onValue(cardsRef, (snapshot) => {
+      cards = snapshot.val() || {};
+      setSyncStatus('connected', 'Synced');
+      render();
+      renderCategoryFilters();
+    }, (err) => {
+      console.error(err);
+      setSyncStatus('error', 'Sync error');
+    });
+
+    document.getElementById('loadingOverlay').classList.remove('show');
+    document.getElementById('appShell').classList.add('show');
+  }
+
+  window.connectFirebase = function() {
+    const cfg = {
+      apiKey: document.getElementById('cfgApiKey').value.trim(),
+      authDomain: document.getElementById('cfgAuthDomain').value.trim(),
+      databaseURL: document.getElementById('cfgDatabaseURL').value.trim(),
+      projectId: document.getElementById('cfgProjectId').value.trim(),
+    };
+
+    if (!cfg.apiKey || !cfg.databaseURL || !cfg.projectId) {
+      document.getElementById('setupError').style.display = 'block';
+      return;
+    }
+
+    try {
+      saveConfig(cfg);
+      document.getElementById('setupScreen').classList.remove('show');
+      document.getElementById('loadingOverlay').classList.add('show');
+      initFirebase(cfg);
+    } catch(e) {
+      document.getElementById('setupError').style.display = 'block';
+    }
+  };
+
+  // ─── SYNC STATUS ──────────────────────────────────────────────────────────
+  function setSyncStatus(state, text) {
+    const dot = document.getElementById('syncDot');
+    const txt = document.getElementById('syncText');
+    dot.className = 'sync-dot ' + state;
+    txt.textContent = text;
+  }
+
+  // ─── CRUD ─────────────────────────────────────────────────────────────────
+  window.saveCard = function() {
+    const store = document.getElementById('fStore').value.trim();
+    const original = parseFloat(document.getElementById('fOriginal').value) || 0;
+    const current = parseFloat(document.getElementById('fCurrent').value);
+
+    if (!store) { alert('Please enter a store name.'); return; }
+
+    setSyncStatus('syncing', 'Saving...');
+
+    const card = {
+      store,
+      original,
+      current: isNaN(current) ? original : current,
+      number: document.getElementById('fNumber').value.trim(),
+      pin: document.getElementById('fPin').value.trim(),
+      category: document.getElementById('fCategory').value,
+      used: editId ? (cards[editId]?.used || false) : false,
+      addedAt: editId ? (cards[editId]?.addedAt || Date.now()) : Date.now()
+    };
+
+    const cardRef = editId
+      ? ref(db, 'giftcards/' + editId)
+      : push(ref(db, 'giftcards'));
+
+    set(editId ? ref(db, 'giftcards/' + editId) : cardRef, card);
+    closeModal();
+  };
+
+  window.deleteCard = function(id) {
+    if (confirm('Remove this gift card?')) {
+      setSyncStatus('syncing', 'Deleting...');
+      remove(ref(db, 'giftcards/' + id));
+    }
+  };
+
+  window.toggleUsed = function(id) {
+    const card = cards[id];
+    setSyncStatus('syncing', 'Saving...');
+    set(ref(db, 'giftcards/' + id), { ...card, used: !card.used });
+  };
+
+  window.updateBalance = function(id) {
+    const input = document.getElementById('newBal_' + id);
+    const val = parseFloat(input.value);
+    if (isNaN(val) || val < 0) { alert('Enter a valid balance.'); return; }
+    setSyncStatus('syncing', 'Saving...');
+    set(ref(db, 'giftcards/' + id), { ...cards[id], current: val });
+    input.value = '';
+  };
+
+  // ─── MODAL ────────────────────────────────────────────────────────────────
+  window.openModal = function(id = null) {
+    editId = id;
+    const c = id ? cards[id] : null;
+    document.getElementById('modalTitle').textContent = id ? 'Edit Gift Card' : 'Add Gift Card';
+    document.getElementById('fStore').value = c?.store || '';
+    document.getElementById('fOriginal').value = c?.original || '';
+    document.getElementById('fCurrent').value = c?.current || '';
+    document.getElementById('fNumber').value = c?.number || '';
+    document.getElementById('fPin').value = c?.pin || '';
+    document.getElementById('fCategory').value = c?.category || '';
+    document.getElementById('modalOverlay').classList.add('open');
+    setTimeout(() => document.getElementById('fStore').focus(), 100);
+  };
+
+  window.closeModal = function() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    editId = null;
+  };
+
+  window.closeModalIfOutside = function(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  };
+
+  window.togglePin = function(id) {
+    pinVisible[id] = !pinVisible[id];
+    render();
+  };
+
+  // ─── FILTERS ──────────────────────────────────────────────────────────────
+  window.setFilter = function(f, btn) {
+    currentFilter = f;
+    currentCategory = null;
+    document.querySelectorAll('#mainFilters .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('#categoryFilters .filter-btn').forEach(b => b.classList.remove('active'));
+    render();
+  };
+
+  window.setCategoryFilter = function(cat) {
+    currentCategory = currentCategory === cat ? null : cat;
+    renderCategoryFilters();
+    render();
+  };
+
+  function getUsedCategories() {
+    const cats = new Set(Object.values(cards).map(c => c.category).filter(Boolean));
+    return [...cats].sort();
+  }
+
+  function renderCategoryFilters() {
+    const cats = getUsedCategories();
+    const el = document.getElementById('categoryFilters');
+    if (!cats.length) { el.innerHTML = ''; return; }
+    el.innerHTML = '<span style="font-size:0.72rem;color:var(--mid);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;align-self:center;">Filter:</span> ' +
+      cats.map(cat => `
+        <button class="filter-btn${currentCategory === cat ? ' active' : ''}" onclick="setCategoryFilter('${cat}')">
+          ${CATEGORY_ICONS[cat] || '📦'} ${cat}
+        </button>`).join('');
+  }
+
+  function getFilteredCards() {
+    let entries = Object.entries(cards).map(([id, c]) => ({ id, ...c }));
+    entries.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+    switch(currentFilter) {
+      case 'active': entries = entries.filter(c => !c.used && c.current > 0); break;
+      case 'used':   entries = entries.filter(c => c.used || c.current === 0); break;
+    }
+    if (currentCategory) entries = entries.filter(c => c.category === currentCategory);
+    return entries;
+  }
+
+  // ─── RENDER ───────────────────────────────────────────────────────────────
+  function fmt(n) { return '$' + parseFloat(n || 0).toFixed(2); }
+
+  function maskNumber(num) {
+    if (!num) return null;
+    const cleaned = num.replace(/\s/g, '');
+    if (cleaned.length <= 4) return num;
+    return '•••• •••• •••• ' + cleaned.slice(-4);
+  }
+
+  function render() {
+    const grid = document.getElementById('cardsGrid');
+    const filtered = getFilteredCards();
+
+    if (!filtered.length) {
+      const msgs = {
+        active: { icon: '🎁', title: 'No active gift cards', sub: 'Add your first one above!' },
+        used:   { icon: '✅', title: 'No used cards', sub: 'Cards you\'ve marked as used appear here.' },
+        all:    { icon: '🎁', title: 'No gift cards yet', sub: 'Add your first one above!' }
+      };
+      const m = msgs[currentFilter] || { icon: '🔍', title: 'No cards found', sub: 'Try a different filter.' };
+      grid.innerHTML = `<div class="empty-state">
+        <div class="icon">${m.icon}</div>
+        <h3>${m.title}</h3>
+        <p>${m.sub}</p>
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = filtered.map(c => {
+      const pct = c.original > 0 ? Math.min(100, (c.current / c.original) * 100) : 0;
+      const isLow = pct > 0 && pct <= 25;
+      const isEmpty = c.current <= 0;
+      const balClass = isEmpty ? 'zero' : isLow ? 'low' : '';
+      const fillClass = isEmpty ? 'empty' : isLow ? 'low' : '';
+      const catIcon = c.category ? (CATEGORY_ICONS[c.category] || '📦') : null;
+      const pinShown = pinVisible[c.id];
+
+      return `
+      <div class="card${c.used ? ' used' : ''}">
+        <div class="card-accent${isEmpty || c.used ? ' empty' : ''}"></div>
+        ${c.used ? '<div class="used-stamp">Used</div>' : ''}
+        <div class="card-header">
+          <div>
+            <div class="card-store">${c.store}</div>
+            ${catIcon ? `<div class="card-cat">${catIcon} ${c.category}</div>` : ''}
+          </div>
+          <div class="card-actions">
+            <button class="icon-btn" title="${c.used ? 'Mark active' : 'Mark as used'}" onclick="toggleUsed('${c.id}')">
+              ${c.used ? '↩' : '✓'}
+            </button>
+            <button class="icon-btn" title="Edit" onclick="openModal('${c.id}')">✎</button>
+            <button class="icon-btn danger" title="Delete" onclick="deleteCard('${c.id}')">✕</button>
+          </div>
+        </div>
+
+        <div class="balance-row">
+          <span class="balance-remaining ${balClass}">${fmt(c.current)}</span>
+          <span class="balance-original">of ${fmt(c.original)}</span>
+        </div>
+
+        <div class="progress-bar">
+          <div class="progress-fill ${fillClass}" style="width:${pct}%"></div>
+        </div>
+
+        ${c.number ? `<div class="card-detail"><span>Card #</span><span class="val">${maskNumber(c.number)}</span></div>` : ''}
+
+        ${c.pin ? `
+        <div class="card-detail">
+          <span>PIN</span>
+          <span class="val ${pinShown ? '' : 'hidden'}">
+            ${pinShown ? c.pin : '••••'}
+            <button class="pin-toggle" onclick="togglePin('${c.id}')">${pinShown ? 'hide' : 'show'}</button>
+          </span>
+        </div>` : ''}
+
+        <div class="update-balance">
+          <input type="number" id="newBal_${c.id}" placeholder="Update balance" min="0" step="0.01">
+          <button class="btn-update" onclick="updateBalance('${c.id}')">Update</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ─── KEYBOARD ─────────────────────────────────────────────────────────────
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  // ─── BOOT ─────────────────────────────────────────────────────────────────
+  initFirebase({
+    apiKey: "AIzaSyC6gBBDtOByoZBvB0WaNEAODDyI1zM-Mws",
+    authDomain: "gift-card-tracker-ac086.firebaseapp.com",
+    databaseURL: "https://gift-card-tracker-ac086-default-rtdb.firebaseio.com",
+    projectId: "gift-card-tracker-ac086"
+  });
+</script>
+</body>
+</html>
