@@ -949,9 +949,15 @@
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>PIN (optional)</label>
+        <label>PIN / CVV (optional)</label>
         <input type="text" id="fPin" placeholder="e.g. 1234">
       </div>
+      <div class="form-group">
+        <label>Expiration (optional)</label>
+        <input type="text" id="fExpiry" placeholder="e.g. 06/28" maxlength="5">
+      </div>
+    </div>
+    <div class="form-row">
       <div class="form-group">
         <label>Category</label>
         <select id="fCategory">
@@ -967,14 +973,14 @@
           <option value="Other">📦 Other</option>
         </select>
       </div>
-    </div>
-    <div class="form-group">
-      <label>Owner</label>
-      <select id="fOwner">
-        <option value="">Both / Either</option>
-        <option value="Chris">👤 Chris</option>
-        <option value="Kate">👤 Kate</option>
-      </select>
+      <div class="form-group">
+        <label>Owner</label>
+        <select id="fOwner">
+          <option value="">Both / Either</option>
+          <option value="Chris">👤 Chris</option>
+          <option value="Kate">👤 Kate</option>
+        </select>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
@@ -1043,6 +1049,7 @@
   let currentCategory = null;
   let currentOwner = null;
   let pinVisible = {};
+  let numberVisible = {};
   let expanded = {};
 
   window.toggleExpand = function(id) {
@@ -1163,6 +1170,7 @@
       current: isNaN(current) ? original : current,
       number: document.getElementById('fNumber').value.trim(),
       pin: document.getElementById('fPin').value.trim(),
+      expiry: document.getElementById('fExpiry').value.trim(),
       category: document.getElementById('fCategory').value,
       owner: document.getElementById('fOwner').value,
       used: editId ? (cards[editId]?.used || false) : false,
@@ -1231,6 +1239,7 @@
     document.getElementById('fCurrent').value = c?.current || '';
     document.getElementById('fNumber').value = c?.number || '';
     document.getElementById('fPin').value = c?.pin || '';
+    document.getElementById('fExpiry').value = c?.expiry || '';
     document.getElementById('fCategory').value = c?.category || '';
     document.getElementById('fOwner').value = c?.owner || '';
     document.getElementById('modalOverlay').classList.add('open');
@@ -1247,8 +1256,22 @@
   };
 
   window.togglePin = function(id) {
+    const card = cards[id];
     pinVisible[id] = !pinVisible[id];
-    render();
+    const display = document.getElementById('pinDisplay_' + id);
+    const btn = document.getElementById('pinBtn_' + id);
+    if (display) {
+      display.innerHTML = `<span class="${pinVisible[id] ? '' : 'hidden'}">${pinVisible[id] ? card.pin : '••••'}</span><button class="pin-toggle" onclick="event.stopPropagation(); togglePin('${id}')" id="pinBtn_${id}">${pinVisible[id] ? 'hide' : 'show'}</button>`;
+    }
+  };
+
+  window.toggleNumber = function(id) {
+    const card = cards[id];
+    numberVisible[id] = !numberVisible[id];
+    const display = document.getElementById('numDisplay_' + id);
+    const btn = document.getElementById('numBtn_' + id);
+    if (display) display.textContent = numberVisible[id] ? card.number : maskNumber(card.number);
+    if (btn) btn.textContent = numberVisible[id] ? 'hide' : 'show';
   };
 
   // ─── FILTERS ──────────────────────────────────────────────────────────────
@@ -1385,7 +1408,16 @@
         </div>
 
         <div class="card-details">
-          ${c.number ? `<div class="card-detail"><span>Card #</span><span class="val">${maskNumber(c.number)}</span></div>` : ''}
+          ${c.number ? `
+          <div class="card-detail">
+            <span>Card #</span>
+            <span class="val" onclick="event.stopPropagation()">
+              <span id="numDisplay_${c.id}">${maskNumber(c.number)}</span>
+              <button class="pin-toggle" onclick="event.stopPropagation(); toggleNumber('${c.id}')" id="numBtn_${c.id}">show</button>
+            </span>
+          </div>` : ''}
+          ${c.expiry ? `<div class="card-detail"><span>Expires</span><span class="val">📅 ${c.expiry}</span></div>` : ''}
+          ${c.pin ? `<div class="card-detail"><span>PIN / CVV</span><span class="val" id="pinDisplay_${c.id}" onclick="event.stopPropagation()"><span class="hidden">••••</span><button class="pin-toggle" onclick="event.stopPropagation(); togglePin('${c.id}')" id="pinBtn_${c.id}">show</button></span></div>` : ''}
           ${c.owner ? `<div class="card-detail"><span>Owner</span><span class="val">👤 ${c.owner}</span></div>` : ''}
           ${c.category ? `<div class="card-detail"><span>Category</span><span class="val">${CATEGORY_ICONS[c.category] || '📦'} ${c.category}</span></div>` : ''}
           <div class="update-balance" onclick="event.stopPropagation()">
