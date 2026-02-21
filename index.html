@@ -413,22 +413,24 @@
   .cards-grid {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
 
   .card {
     background: white;
     border-radius: 14px;
-    padding: 16px 20px;
+    padding: 0;
     box-shadow: var(--shadow);
     border: 1.5px solid var(--border);
-    transition: all 0.2s;
+    transition: box-shadow 0.2s, border-color 0.2s;
     position: relative;
     overflow: hidden;
+    cursor: pointer;
   }
 
-  .card:hover { box-shadow: var(--shadow-lg); }
-  .card.used { opacity: 0.55; background: var(--cream); }
+  .card:hover { box-shadow: var(--shadow-lg); border-color: #B8C8E0; }
+  .card.used { opacity: 0.5; background: var(--cream); }
+  .card.expanded { border-color: var(--charcoal); }
 
   .card-accent {
     position: absolute;
@@ -436,26 +438,20 @@
     width: 4px;
     background: var(--gold);
     border-radius: 4px 0 0 4px;
+    flex-shrink: 0;
   }
 
   .card-accent.empty { background: var(--light); }
 
-  /* LIST ROW LAYOUT */
+  /* MAIN ROW */
   .card-main-row {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding-left: 12px;
+    gap: 14px;
+    padding: 14px 16px 14px 20px;
   }
 
   .card-info { flex: 1; min-width: 0; }
-
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0;
-  }
 
   .card-store {
     font-family: 'Playfair Display', serif;
@@ -467,11 +463,27 @@
     text-overflow: ellipsis;
   }
 
+  .card-meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 2px;
+    flex-wrap: wrap;
+  }
+
   .card-cat {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     color: var(--mid);
-    margin-top: 1px;
     font-weight: 500;
+  }
+
+  .card-owner-badge {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--gold);
+    background: var(--gold-pale);
+    padding: 1px 7px;
+    border-radius: 20px;
   }
 
   .card-balance-col {
@@ -481,7 +493,7 @@
 
   .balance-remaining {
     font-family: 'Playfair Display', serif;
-    font-size: 1.3rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--charcoal);
     line-height: 1;
@@ -489,45 +501,37 @@
 
   .balance-remaining.zero { color: var(--light); }
   .balance-remaining.low { color: var(--gold); }
+  .balance-original { font-size: 0.68rem; color: var(--light); margin-top: 1px; }
 
-  .balance-original { font-size: 0.72rem; color: var(--light); }
-
-  .progress-bar {
-    height: 4px;
+  /* PROGRESS BAR — sleek single line */
+  .progress-track {
+    height: 2px;
     background: var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-    margin: 8px 0 0 12px;
+    margin: 0 0 0 4px;
   }
 
   .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #002D72, #1A5CAD);
-    border-radius: 10px;
-    transition: width 0.4s ease;
+    background: var(--charcoal);
+    transition: width 0.5s ease;
   }
 
-  .progress-fill.low { background: linear-gradient(90deg, #FF5910, #FF8850); }
-  .progress-fill.empty { background: var(--light); width: 0 !important; }
+  .progress-fill.low { background: var(--gold); }
+  .progress-fill.empty { width: 0 !important; }
 
-  /* EXPANDED DETAILS */
-  .card-details {
-    display: none;
-    padding: 12px 0 4px 16px;
-    border-top: 1.5px solid var(--border);
-    margin-top: 12px;
+  /* ACTIONS */
+  .card-actions {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
   }
-
-  .card.expanded .card-details { display: block; }
-
-  .card-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
   .icon-btn {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     border-radius: 8px;
-    border: none;
-    background: var(--cream);
+    border: 1.5px solid var(--border);
+    background: white;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -535,17 +539,29 @@
     color: var(--mid);
     transition: all 0.15s;
     font-size: 13px;
+    flex-shrink: 0;
   }
 
-  .icon-btn:hover { background: var(--border); color: var(--charcoal); }
-  .icon-btn.danger:hover { background: var(--red-pale); color: var(--red); }
+  .icon-btn:hover { background: var(--cream); color: var(--charcoal); border-color: var(--charcoal); }
+  .icon-btn.danger:hover { background: var(--red-pale); color: var(--red); border-color: var(--red); }
+
+  /* EXPANDED DETAILS */
+  .card-details {
+    display: none;
+    padding: 14px 20px 16px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--warm-white);
+  }
+
+  .card.expanded .card-details { display: block; }
 
   .card-detail {
     display: flex;
     justify-content: space-between;
-    font-size: 0.78rem;
+    align-items: center;
+    font-size: 0.8rem;
     color: var(--mid);
-    padding: 4px 0;
+    padding: 6px 0;
     border-bottom: 1px solid var(--border);
   }
 
@@ -558,82 +574,137 @@
     letter-spacing: 0.03em;
   }
 
-  .card-detail .val.hidden { letter-spacing: 0.1em; color: var(--light); }
+  .card-detail .val.hidden { letter-spacing: 0.15em; color: var(--light); }
 
   .pin-toggle {
     background: none;
     border: none;
     cursor: pointer;
     color: var(--gold);
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 600;
     padding: 0;
-    margin-left: 6px;
+    margin-left: 8px;
     font-family: 'DM Sans', sans-serif;
   }
 
   .used-stamp {
     position: absolute;
     top: 50%; left: 50%;
-    transform: translate(-50%, -50%) rotate(-15deg);
+    transform: translate(-50%, -50%) rotate(-12deg);
     font-family: 'Playfair Display', serif;
-    font-size: 2rem;
+    font-size: 1.6rem;
     font-weight: 700;
-    color: rgba(0,0,0,0.06);
+    color: rgba(0,0,0,0.05);
     text-transform: uppercase;
     letter-spacing: 0.2em;
     pointer-events: none;
     white-space: nowrap;
   }
 
+  /* UPDATE BALANCE */
   .update-balance {
     display: flex;
     gap: 8px;
-    margin-top: 10px;
+    margin-top: 12px;
     align-items: center;
   }
 
   .update-balance input {
     flex: 1;
-    padding: 7px 10px;
-    font-size: 0.85rem;
+    padding: 9px 12px;
+    font-size: 0.88rem;
     border-radius: 8px;
     border: 1.5px solid var(--border);
     font-family: 'DM Sans', sans-serif;
     outline: none;
     transition: border-color 0.2s;
+    background: white;
   }
 
-  .update-balance input:focus { border-color: var(--gold); }
+  .update-balance input:focus { border-color: var(--charcoal); }
 
   .btn-update {
-    padding: 7px 12px;
+    padding: 9px 16px;
     background: var(--charcoal);
     color: white;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 600;
     white-space: nowrap;
     transition: background 0.2s;
+    font-family: 'DM Sans', sans-serif;
   }
 
   .btn-update:hover { background: var(--dark); }
 
-  .expand-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--light);
-    font-size: 0.75rem;
-    padding: 0;
-    margin-left: 4px;
-    transition: color 0.2s;
-    flex-shrink: 0;
+  /* CONFIRM DIALOG */
+  .confirm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(3px);
   }
 
-  .expand-btn:hover { color: var(--mid); }
+  .confirm-overlay.open { display: flex; }
+
+  .confirm-box {
+    background: white;
+    border-radius: 16px;
+    padding: 28px 28px 22px;
+    max-width: 340px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+    animation: modalIn 0.2s ease;
+  }
+
+  .confirm-box .confirm-icon { font-size: 2rem; margin-bottom: 10px; }
+  .confirm-box h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--charcoal); margin-bottom: 6px; }
+  .confirm-box p { font-size: 0.83rem; color: var(--mid); margin-bottom: 20px; line-height: 1.5; }
+
+  .confirm-actions { display: flex; gap: 10px; }
+
+  .btn-confirm-cancel {
+    flex: 1;
+    padding: 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: white;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--mid);
+    transition: all 0.2s;
+    font-size: 0.88rem;
+  }
+
+  .btn-confirm-cancel:hover { background: var(--cream); }
+
+  .btn-confirm-ok {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: var(--charcoal);
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.88rem;
+  }
+
+  .btn-confirm-ok:hover { background: var(--dark); }
+  .btn-confirm-ok.danger { background: var(--red); }
+  .btn-confirm-ok.danger:hover { background: #A93226; }
 
   /* EMPTY STATE */
   .empty-state {
@@ -892,6 +963,7 @@
           <option value="Grocery">🛒 Grocery</option>
           <option value="Gas">⛽ Gas</option>
           <option value="Online">💻 Online</option>
+          <option value="Visa">💳 Visa</option>
           <option value="Other">📦 Other</option>
         </select>
       </div>
@@ -907,6 +979,19 @@
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
       <button class="btn-save" onclick="saveCard()">Save Card</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirmIcon">⚠️</div>
+    <h3 id="confirmTitle">Are you sure?</h3>
+    <p id="confirmMsg"></p>
+    <div class="confirm-actions">
+      <button class="btn-confirm-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-confirm-ok" id="confirmOkBtn" onclick="confirmAction()">Yes, do it</button>
     </div>
   </div>
 </div>
@@ -968,7 +1053,7 @@
   const CATEGORY_ICONS = {
     'Dining':'🍽️','Shopping':'🛍️','Travel':'✈️',
     'Entertainment':'🎬','Grocery':'🛒','Gas':'⛽',
-    'Online':'💻','Other':'📦'
+    'Online':'💻','Visa':'💳','Other':'📦'
   };
 
   // ─── CONFIG ───────────────────────────────────────────────────────────────
@@ -1038,6 +1123,30 @@
     txt.textContent = text;
   }
 
+  // ─── CONFIRM DIALOG ───────────────────────────────────────────────────────
+  let pendingAction = null;
+
+  function showConfirm({ icon, title, msg, okLabel, danger, action }) {
+    document.getElementById('confirmIcon').textContent = icon;
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMsg').textContent = msg;
+    const okBtn = document.getElementById('confirmOkBtn');
+    okBtn.textContent = okLabel;
+    okBtn.className = 'btn-confirm-ok' + (danger ? ' danger' : '');
+    pendingAction = action;
+    document.getElementById('confirmOverlay').classList.add('open');
+  }
+
+  window.closeConfirm = function() {
+    document.getElementById('confirmOverlay').classList.remove('open');
+    pendingAction = null;
+  };
+
+  window.confirmAction = function() {
+    if (pendingAction) pendingAction();
+    closeConfirm();
+  };
+
   // ─── CRUD ─────────────────────────────────────────────────────────────────
   window.saveCard = function() {
     const store = document.getElementById('fStore').value.trim();
@@ -1068,17 +1177,39 @@
     closeModal();
   };
 
-  window.deleteCard = function(id) {
-    if (confirm('Remove this gift card?')) {
-      setSyncStatus('syncing', 'Deleting...');
-      remove(ref(db, 'giftcards/' + id));
-    }
+  window.deleteCard = function(id, e) {
+    e.stopPropagation();
+    const c = cards[id];
+    showConfirm({
+      icon: '🗑️',
+      title: 'Delete this card?',
+      msg: `"${c.store}" will be permanently removed.`,
+      okLabel: 'Yes, delete',
+      danger: true,
+      action: () => {
+        setSyncStatus('syncing', 'Deleting...');
+        remove(ref(db, 'giftcards/' + id));
+      }
+    });
   };
 
-  window.toggleUsed = function(id) {
+  window.toggleUsed = function(id, e) {
+    e.stopPropagation();
     const card = cards[id];
-    setSyncStatus('syncing', 'Saving...');
-    set(ref(db, 'giftcards/' + id), { ...card, used: !card.used });
+    const markingUsed = !card.used;
+    showConfirm({
+      icon: markingUsed ? '✅' : '↩️',
+      title: markingUsed ? 'Mark as used?' : 'Mark as active?',
+      msg: markingUsed
+        ? `"${card.store}" will be moved to your Used cards.`
+        : `"${card.store}" will be moved back to Active cards.`,
+      okLabel: markingUsed ? 'Yes, mark used' : 'Yes, reactivate',
+      danger: false,
+      action: () => {
+        setSyncStatus('syncing', 'Saving...');
+        set(ref(db, 'giftcards/' + id), { ...card, used: !card.used });
+      }
+    });
   };
 
   window.updateBalance = function(id) {
@@ -1222,16 +1353,16 @@
       const isExpanded = expanded[c.id];
 
       return `
-      <div class="card${c.used ? ' used' : ''}${isExpanded ? ' expanded' : ''}" id="card_${c.id}">
+      <div class="card${c.used ? ' used' : ''}${isExpanded ? ' expanded' : ''}" id="card_${c.id}" onclick="toggleExpand('${c.id}')">
         <div class="card-accent${isEmpty || c.used ? ' empty' : ''}"></div>
         ${c.used ? '<div class="used-stamp">Used</div>' : ''}
 
         <div class="card-main-row">
           <div class="card-info">
             <div class="card-store">${c.store}</div>
-            <div style="display:flex;gap:6px;align-items:center;margin-top:2px;flex-wrap:wrap;">
-              ${catIcon ? `<div class="card-cat">${catIcon} ${c.category}</div>` : ''}
-              ${c.owner ? `<div class="card-cat" style="color:var(--gold);font-weight:600;">👤 ${c.owner}</div>` : ''}
+            <div class="card-meta">
+              ${catIcon ? `<span class="card-cat">${catIcon} ${c.category}</span>` : ''}
+              ${c.owner ? `<span class="card-owner-badge">👤 ${c.owner}</span>` : ''}
             </div>
           </div>
 
@@ -1240,34 +1371,25 @@
             <div class="balance-original">of ${fmt(c.original)}</div>
           </div>
 
-          <div class="card-actions">
-            <button class="expand-btn" title="${isExpanded ? 'Collapse' : 'Expand'}" onclick="toggleExpand('${c.id}')">
-              ${isExpanded ? '▲' : '▼'}
-            </button>
-            <button class="icon-btn" title="${c.used ? 'Mark active' : 'Mark as used'}" onclick="toggleUsed('${c.id}')">
+          <div class="card-actions" onclick="event.stopPropagation()">
+            <button class="icon-btn" title="${c.used ? 'Mark active' : 'Mark as used'}" onclick="toggleUsed('${c.id}', event)">
               ${c.used ? '↩' : '✓'}
             </button>
-            <button class="icon-btn" title="Edit" onclick="openModal('${c.id}')">✎</button>
-            <button class="icon-btn danger" title="Delete" onclick="deleteCard('${c.id}')">✕</button>
+            <button class="icon-btn" title="Edit" onclick="event.stopPropagation(); openModal('${c.id}')">✎</button>
+            <button class="icon-btn danger" title="Delete" onclick="deleteCard('${c.id}', event)">✕</button>
           </div>
         </div>
 
-        <div class="progress-bar">
+        <div class="progress-track">
           <div class="progress-fill ${fillClass}" style="width:${pct}%"></div>
         </div>
 
         <div class="card-details">
           ${c.number ? `<div class="card-detail"><span>Card #</span><span class="val">${maskNumber(c.number)}</span></div>` : ''}
-          ${c.pin ? `
-          <div class="card-detail">
-            <span>PIN</span>
-            <span class="val ${pinShown ? '' : 'hidden'}">
-              ${pinShown ? c.pin : '••••'}
-              <button class="pin-toggle" onclick="togglePin('${c.id}')">${pinShown ? 'hide' : 'show'}</button>
-            </span>
-          </div>` : ''}
-          <div class="update-balance">
-            <input type="number" id="newBal_${c.id}" placeholder="Update balance" min="0" step="0.01">
+          ${c.owner ? `<div class="card-detail"><span>Owner</span><span class="val">👤 ${c.owner}</span></div>` : ''}
+          ${c.category ? `<div class="card-detail"><span>Category</span><span class="val">${CATEGORY_ICONS[c.category] || '📦'} ${c.category}</span></div>` : ''}
+          <div class="update-balance" onclick="event.stopPropagation()">
+            <input type="number" id="newBal_${c.id}" placeholder="New balance" min="0" step="0.01">
             <button class="btn-update" onclick="updateBalance('${c.id}')">Update</button>
           </div>
         </div>
