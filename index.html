@@ -706,6 +706,16 @@
   .btn-confirm-ok.danger { background: var(--red); }
   .btn-confirm-ok.danger:hover { background: #A93226; }
 
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 16px 24px 32px;
+    font-size: 0.72rem;
+    color: var(--light);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
   /* EMPTY STATE */
   .empty-state {
     text-align: center;
@@ -923,6 +933,10 @@
 
     <div class="cards-grid" id="cardsGrid"></div>
   </main>
+
+  <footer id="appFooter">
+    <span id="lastUpdatedText">—</span>
+  </footer>
 </div>
 
 <!-- MODAL -->
@@ -1005,13 +1019,42 @@
 <!-- PASSWORD LOGIC -->
 <script>
   const PASSPHRASE = 'HaileyJet';
+  const LOCK_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+  let lockTimer = null;
+
+  function unlock() {
+    sessionStorage.setItem('gc_unlocked', '1');
+    sessionStorage.setItem('gc_unlocked_at', Date.now().toString());
+    document.getElementById('passwordScreen').classList.remove('show');
+    resetLockTimer();
+  }
+
+  function lock() {
+    sessionStorage.removeItem('gc_unlocked');
+    sessionStorage.removeItem('gc_unlocked_at');
+    document.getElementById('passwordScreen').classList.add('show');
+    document.getElementById('pwInput').value = '';
+    setTimeout(() => document.getElementById('pwInput').focus(), 100);
+    if (lockTimer) clearTimeout(lockTimer);
+  }
+
+  function resetLockTimer() {
+    if (lockTimer) clearTimeout(lockTimer);
+    lockTimer = setTimeout(lock, LOCK_TIMEOUT);
+  }
+
+  // Reset timer on any user interaction
+  ['click','keydown','touchstart','scroll'].forEach(evt => {
+    document.addEventListener(evt, () => {
+      if (sessionStorage.getItem('gc_unlocked') === '1') resetLockTimer();
+    }, { passive: true });
+  });
 
   function checkPassword() {
     const input = document.getElementById('pwInput');
     const error = document.getElementById('pwError');
     if (input.value === PASSPHRASE) {
-      sessionStorage.setItem('gc_unlocked', '1');
-      document.getElementById('passwordScreen').classList.remove('show');
+      unlock();
       input.value = '';
       error.textContent = '';
     } else {
@@ -1028,10 +1071,13 @@
     input.type = input.type === 'password' ? 'text' : 'password';
   }
 
-  // Check session on load
-  if (sessionStorage.getItem('gc_unlocked') === '1') {
+  // Check session on load — also verify it hasn't been too long
+  const unlockedAt = parseInt(sessionStorage.getItem('gc_unlocked_at') || '0');
+  if (sessionStorage.getItem('gc_unlocked') === '1' && (Date.now() - unlockedAt < LOCK_TIMEOUT)) {
     document.getElementById('passwordScreen').classList.remove('show');
+    resetLockTimer();
   } else {
+    sessionStorage.removeItem('gc_unlocked');
     setTimeout(() => document.getElementById('pwInput').focus(), 100);
   }
 </script>
@@ -1090,10 +1136,14 @@
       setSyncStatus('connected', 'Synced');
       render();
       renderCategoryFilters();
+      updateFooter();
     }, (err) => {
       console.error(err);
       setSyncStatus('error', 'Sync error');
     });
+
+    // Refresh footer time display every minute
+    setInterval(updateFooter, 60000);
 
     document.getElementById('loadingOverlay').classList.remove('show');
     document.getElementById('appShell').classList.add('show');
@@ -1174,7 +1224,9 @@
       category: document.getElementById('fCategory').value,
       owner: document.getElementById('fOwner').value,
       used: editId ? (cards[editId]?.used || false) : false,
-      addedAt: editId ? (cards[editId]?.addedAt || Date.now()) : Date.now()
+      addedAt: editId ? (cards[editId]?.addedAt || Date.now()) : Date.now(),
+      updatedBy: document.getElementById('fOwner').value || 'Someone',
+      updatedAt: Date.now()
     };
 
     const cardRef = editId
@@ -1215,7 +1267,7 @@
       danger: false,
       action: () => {
         setSyncStatus('syncing', 'Saving...');
-        set(ref(db, 'giftcards/' + id), { ...card, used: !card.used });
+        set(ref(db, 'giftcards/' + id), { ...card, used: !card.used, updatedBy: card.owner || 'Someone', updatedAt: Date.now() });
       }
     });
   };
@@ -1225,7 +1277,7 @@
     const val = parseFloat(input.value);
     if (isNaN(val) || val < 0) { alert('Enter a valid balance.'); return; }
     setSyncStatus('syncing', 'Saving...');
-    set(ref(db, 'giftcards/' + id), { ...cards[id], current: val });
+    set(ref(db, 'giftcards/' + id), { ...cards[id], current: val, updatedBy: cards[id].owner || 'Someone', updatedAt: Date.now() });
     input.value = '';
   };
 
@@ -1338,6 +1390,24 @@
 
   // ─── RENDER ───────────────────────────────────────────────────────────────
   function fmt(n) { return '$' + parseFloat(n || 0).toFixed(2); }
+
+  function timeAgo(ts) {
+    if (!ts) return 'a while ago';
+    const diff = Math.floor((Date.now() - ts) / 1000);
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  }
+
+  function updateFooter() {
+    const allCards = Object.values(cards);
+    if (!allCards.length) { document.getElementById('lastUpdatedText').textContent = '—'; return; }
+    const latest = allCards.reduce((a, b) => ((b.updatedAt || 0) > (a.updatedAt || 0) ? b : a));
+    if (!latest.updatedAt) { document.getElementById('lastUpdatedText').textContent = '—'; return; }
+    document.getElementById('lastUpdatedText').textContent =
+      `Last updated by ${latest.updatedBy || 'Someone'} · ${timeAgo(latest.updatedAt)}`;
+  }
 
   function maskNumber(num) {
     if (!num) return null;
